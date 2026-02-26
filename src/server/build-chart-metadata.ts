@@ -14,7 +14,7 @@ interface ChartMetadata {
   charts: ChartEntry[];
 }
 
-function extractRunId(model: Model, urls: string[]): string {
+function extractRunId(urls: string[]): string {
   if (urls.length === 0) return "";
   const url = urls[0];
   const match = url.match(/runs\/(\d{10})\//);
@@ -57,7 +57,7 @@ function makeProxyUrl(model: Model, originalUrl: string): string {
 }
 
 export function buildChartMetadata(model: Model, imgUrls: string[]): ChartMetadata {
-  const runId = extractRunId(model, imgUrls);
+  const runId = extractRunId(imgUrls);
   const runHour = runId ? parseInt(runId.slice(8, 10), 10) : 0;
   const middayHours = new Set(getMiddayForecastHours(model, runHour));
 

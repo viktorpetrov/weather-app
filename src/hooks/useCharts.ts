@@ -24,11 +24,16 @@ export function useCharts(model: "gfs" | "ecmwf"): UseChartsResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [fetchKey, setFetchKey] = useState({ model, retryCount });
+
+  if (fetchKey.model !== model || fetchKey.retryCount !== retryCount) {
+    setFetchKey({ model, retryCount });
+    setLoading(true);
+    setError(null);
+  }
 
   useEffect(() => {
     let cancelled = false;
-    setLoading(true);
-    setError(null);
 
     fetch(`/api/charts/${model}`)
       .then((res) => {

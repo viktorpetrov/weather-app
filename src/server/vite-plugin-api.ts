@@ -9,6 +9,17 @@ const MODEL_PAGES: Record<Model, string> = {
   ecmwf: "https://www.meteociel.fr/modeles/ecmwf.php?mode=0&map=0&type=0",
 };
 
+const ALLOWED_HOSTS = ["www.meteociel.fr", "modeles2.meteociel.fr", "meteociel.fr"];
+
+function isAllowedUrl(urlStr: string): boolean {
+  try {
+    const parsed = new URL(urlStr);
+    return ALLOWED_HOSTS.includes(parsed.hostname) && parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 export function apiPlugin(): Plugin {
   return {
     name: "weather-api",
@@ -21,6 +32,11 @@ export function apiPlugin(): Plugin {
           if (!imageUrl) {
             res.writeHead(400, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ error: "Missing url parameter" }));
+            return;
+          }
+          if (!isAllowedUrl(imageUrl)) {
+            res.writeHead(403, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ error: "URL not allowed" }));
             return;
           }
           try {
@@ -38,7 +54,7 @@ export function apiPlugin(): Plugin {
             });
             const buffer = Buffer.from(await response.arrayBuffer());
             res.end(buffer);
-          } catch (err) {
+          } catch {
             res.writeHead(502, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ error: "Failed to fetch image" }));
           }
@@ -67,7 +83,7 @@ export function apiPlugin(): Plugin {
               "Cache-Control": "public, max-age=1800",
             });
             res.end(JSON.stringify(metadata));
-          } catch (err) {
+          } catch {
             res.writeHead(502, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ error: "Failed to fetch chart data" }));
           }
