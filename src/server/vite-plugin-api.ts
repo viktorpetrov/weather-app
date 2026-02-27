@@ -6,10 +6,10 @@ type Model = "gfs" | "ecmwf";
 
 const MODEL_PAGES: Record<Model, string> = {
   gfs: "https://www.meteociel.fr/modeles/index.php?carte=778",
-  ecmwf: "https://www.meteociel.fr/modeles/ecmwf.php?mode=0&map=0&type=0",
+  ecmwf: "https://www.meteociel.fr/modeles/ecmwf_hres.php?ech=3&mode=30&carte=2",
 };
 
-const ALLOWED_HOSTS = ["www.meteociel.fr", "modeles2.meteociel.fr", "meteociel.fr"];
+const ALLOWED_HOSTS = ["www.meteociel.fr", "modeles2.meteociel.fr", "modeles3.meteociel.fr", "meteociel.fr"];
 
 function isAllowedUrl(urlStr: string): boolean {
   try {

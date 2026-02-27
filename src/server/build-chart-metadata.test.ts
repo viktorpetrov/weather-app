@@ -26,24 +26,28 @@ describe("buildChartMetadata", () => {
     ]);
   });
 
-  it("builds ECMWF chart metadata from imgArray URLs", () => {
+  it("builds ECMWF HRES chart metadata from imgArray URLs", () => {
+    // Simulate a 00Z ECMWF HRES run with 3h steps
     const imgUrls = [
-      "/modeles/ecmwf/runs/2026022600/ECM0-0.GIF?26-12",
-      "/modeles/ecmwf/runs/2026022600/ECM0-24.GIF?26-12",
-      "/modeles/ecmwf/runs/2026022600/ECM0-48.GIF?26-12",
+      "https://modeles3.meteociel.fr/modeles/ecmwf/runs/2026022600/ecmwffr-30-3.png?0",
+      "https://modeles3.meteociel.fr/modeles/ecmwf/runs/2026022600/ecmwffr-30-6.png?0",
+      "https://modeles3.meteociel.fr/modeles/ecmwf/runs/2026022600/ecmwffr-30-9.png?0",
+      "https://modeles3.meteociel.fr/modeles/ecmwf/runs/2026022600/ecmwffr-30-12.png?0",
+      "https://modeles3.meteociel.fr/modeles/ecmwf/runs/2026022600/ecmwffr-30-15.png?0",
     ];
 
     const result = buildChartMetadata("ecmwf", imgUrls);
 
     expect(result.model).toBe("ecmwf");
     expect(result.run).toBe("2026022600");
-    expect(result.charts).toHaveLength(3);
-    expect(result.charts[0].hour).toBe(0);
-    expect(result.charts[0].date).toBe("2026-02-26");
-    expect(result.charts[1].hour).toBe(24);
-    expect(result.charts[1].date).toBe("2026-02-27");
-    expect(result.charts[2].hour).toBe(48);
-    expect(result.charts[2].date).toBe("2026-02-28");
+    // Only hour 12 is a midday hour from 00Z run
+    expect(result.charts).toEqual([
+      {
+        hour: 12,
+        date: "2026-02-26",
+        imageUrl: "/api/image?url=https%3A%2F%2Fmodeles3.meteociel.fr%2Fmodeles%2Fecmwf%2Fruns%2F2026022600%2Fecmwffr-30-12.png%3F0",
+      },
+    ]);
   });
 
   it("returns empty charts when imgArray is empty", () => {

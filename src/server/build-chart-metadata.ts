@@ -28,9 +28,12 @@ function extractForecastHour(model: Model, url: string): number {
     const match = url.match(/\/(\d+)-\d+\.GIF/);
     return match ? parseInt(match[1], 10) : -1;
   }
-  // ECMWF pattern: ECM{mode}-HOUR.GIF (mode varies: 0=temp, 1=pressure, etc.)
-  const match = url.match(/ECM\d+-(\d+)\.GIF/);
-  return match ? parseInt(match[1], 10) : -1;
+  // ECMWF HRES pattern: ecmwffr-{mode}-HOUR.png
+  const match = url.match(/ecmwffr-\d+-(\d+)\.png/);
+  if (match) return parseInt(match[1], 10);
+  // Legacy ECMWF pattern: ECM{mode}-HOUR.GIF
+  const legacyMatch = url.match(/ECM\d+-(\d+)\.GIF/);
+  return legacyMatch ? parseInt(legacyMatch[1], 10) : -1;
 }
 
 function forecastDate(runId: string, forecastHour: number): string {
@@ -49,11 +52,10 @@ function forecastDate(runId: string, forecastHour: number): string {
   return `${y}-${m}-${d}`;
 }
 
-function makeProxyUrl(model: Model, originalUrl: string): string {
-  const fullUrl =
-    model === "ecmwf" && !originalUrl.startsWith("http")
-      ? `https://www.meteociel.fr${originalUrl}`
-      : originalUrl;
+function makeProxyUrl(originalUrl: string): string {
+  const fullUrl = originalUrl.startsWith("http")
+    ? originalUrl
+    : `https://www.meteociel.fr${originalUrl}`;
   return `/api/image?url=${encodeURIComponent(fullUrl)}`;
 }
 
@@ -76,7 +78,7 @@ export function buildChartMetadata(model: Model, imgUrls: string[], sourceUrl = 
       charts.push({
         hour,
         date: forecastDate(runId, hour),
-        imageUrl: makeProxyUrl(model, url),
+        imageUrl: makeProxyUrl(url),
       });
     }
   }

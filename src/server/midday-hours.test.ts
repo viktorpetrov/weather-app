@@ -25,14 +25,14 @@ describe("getMiddayForecastHours", () => {
   });
 
   describe("ECMWF", () => {
-    it("returns all available steps for 00Z run (24h interval)", () => {
+    it("returns midday hours for 00Z run (up to 360h)", () => {
       const hours = getMiddayForecastHours("ecmwf", 0);
-      expect(hours).toEqual([0, 24, 48, 72, 96, 120, 144, 168, 192, 216, 240]);
+      expect(hours).toEqual([12, 36, 60, 84, 108, 132, 156, 180, 204, 228, 252, 276, 300, 324, 348]);
     });
 
-    it("returns all available steps for 12Z run", () => {
+    it("returns midday hours for 12Z run (up to 360h)", () => {
       const hours = getMiddayForecastHours("ecmwf", 12);
-      expect(hours).toEqual([0, 24, 48, 72, 96, 120, 144, 168, 192, 216, 240]);
+      expect(hours).toEqual([0, 24, 48, 72, 96, 120, 144, 168, 192, 216, 240, 264, 288, 312, 336, 360]);
     });
   });
 });
