@@ -48,6 +48,7 @@ export default function ChartGrid({ model }: ChartGridProps) {
             key={chart.hour}
             date={chart.date}
             hour={chart.hour}
+            runHour={parseInt(data.run.slice(8, 10), 10)}
             imageUrl={chart.imageUrl}
             onClick={() => setLightboxUrl(chart.imageUrl)}
           />
