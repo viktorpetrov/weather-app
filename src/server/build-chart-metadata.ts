@@ -27,8 +27,8 @@ function extractForecastHour(model: Model, url: string): number {
     const match = url.match(/\/(\d+)-\d+\.GIF/);
     return match ? parseInt(match[1], 10) : -1;
   }
-  // ECMWF pattern: ECM1-HOUR.GIF
-  const match = url.match(/ECM1-(\d+)\.GIF/);
+  // ECMWF pattern: ECM{mode}-HOUR.GIF (mode varies: 0=temp, 1=pressure, etc.)
+  const match = url.match(/ECM\d+-(\d+)\.GIF/);
   return match ? parseInt(match[1], 10) : -1;
 }
 

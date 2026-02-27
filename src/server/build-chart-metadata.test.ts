@@ -28,9 +28,9 @@ describe("buildChartMetadata", () => {
 
   it("builds ECMWF chart metadata from imgArray URLs", () => {
     const imgUrls = [
-      "/modeles/ecmwf/runs/2026022600/ECM1-0.GIF?26-12",
-      "/modeles/ecmwf/runs/2026022600/ECM1-24.GIF?26-12",
-      "/modeles/ecmwf/runs/2026022600/ECM1-48.GIF?26-12",
+      "/modeles/ecmwf/runs/2026022600/ECM0-0.GIF?26-12",
+      "/modeles/ecmwf/runs/2026022600/ECM0-24.GIF?26-12",
+      "/modeles/ecmwf/runs/2026022600/ECM0-48.GIF?26-12",
     ];
 
     const result = buildChartMetadata("ecmwf", imgUrls);
