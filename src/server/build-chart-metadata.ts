@@ -11,6 +11,7 @@ interface ChartEntry {
 interface ChartMetadata {
   model: string;
   run: string;
+  sourceUrl: string;
   charts: ChartEntry[];
 }
 
@@ -56,7 +57,7 @@ function makeProxyUrl(model: Model, originalUrl: string): string {
   return `/api/image?url=${encodeURIComponent(fullUrl)}`;
 }
 
-export function buildChartMetadata(model: Model, imgUrls: string[]): ChartMetadata {
+export function buildChartMetadata(model: Model, imgUrls: string[], sourceUrl = ""): ChartMetadata {
   const runId = extractRunId(imgUrls);
   const runHour = runId ? parseInt(runId.slice(8, 10), 10) : 0;
   const middayHours = new Set(getMiddayForecastHours(model, runHour));
@@ -82,5 +83,5 @@ export function buildChartMetadata(model: Model, imgUrls: string[]): ChartMetada
 
   charts.sort((a, b) => a.hour - b.hour);
 
-  return { model, run: runId, charts };
+  return { model, run: runId, sourceUrl, charts };
 }

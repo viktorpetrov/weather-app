@@ -76,7 +76,7 @@ export function apiPlugin(): Plugin {
             }
             const html = await response.text();
             const imgUrls = parseImgArray(html);
-            const metadata = buildChartMetadata(model, imgUrls);
+            const metadata = buildChartMetadata(model, imgUrls, pageUrl);
 
             res.writeHead(200, {
               "Content-Type": "application/json",

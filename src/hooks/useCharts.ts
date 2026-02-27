@@ -9,6 +9,7 @@ interface ChartEntry {
 interface ChartData {
   model: string;
   run: string;
+  sourceUrl: string;
   charts: ChartEntry[];
 }
 
