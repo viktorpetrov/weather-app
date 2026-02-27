@@ -28,10 +28,10 @@ export default function ChartCard({ date, hour, runHour, imageUrl, onClick }: Ch
   return (
     <button
       onClick={onClick}
-      className={`rounded-lg overflow-hidden border hover:border-blue-500 transition-colors cursor-pointer shadow-sm ${
+      className={`rounded-lg overflow-hidden hover:border-blue-500 transition-colors cursor-pointer shadow-sm ${
         isWeekend
-          ? "bg-green-50 border-green-200"
-          : "bg-white border-gray-200"
+          ? "bg-green-50 border-2 border-green-400"
+          : "bg-white border border-gray-200"
       }`}
     >
       <div className="p-2 text-sm text-gray-600 flex justify-between">
