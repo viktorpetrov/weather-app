@@ -41,19 +41,6 @@ export default function ChartGrid({ model }: ChartGridProps) {
     <>
       <p className="text-gray-500 text-sm mb-4">
         Run: {data.run} — {data.charts.length} forecast days
-        {data.sourceUrl && (
-          <>
-            {" — "}
-            <a
-              href={data.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:text-blue-500 underline"
-            >
-              meteociel.fr source
-            </a>
-          </>
-        )}
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {data.charts.map((chart) => (
@@ -66,6 +53,19 @@ export default function ChartGrid({ model }: ChartGridProps) {
           />
         ))}
       </div>
+      {data.sourceUrl && (
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Source:{" "}
+          <a
+            href={data.sourceUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-500 underline"
+          >
+            {data.sourceUrl}
+          </a>
+        </p>
+      )}
       {lightboxUrl && (
         <Lightbox imageUrl={lightboxUrl} onClose={() => setLightboxUrl(null)} />
       )}
