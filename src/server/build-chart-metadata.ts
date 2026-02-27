@@ -1,4 +1,4 @@
-import { getMiddayForecastHours } from "./midday-hours";
+import { getMiddayForecastHours } from "./midday-hours.js";
 
 type Model = "gfs" | "ecmwf";
 
