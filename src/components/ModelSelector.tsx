@@ -20,7 +20,7 @@ export default function ModelSelector({ selected, onChange }: ModelSelectorProps
           className={`px-4 py-2 rounded font-medium transition-colors ${
             selected === m.value
               ? "bg-blue-600 text-white"
-              : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+              : "bg-gray-200 text-gray-600 hover:bg-gray-300"
           }`}
         >
           {m.label}

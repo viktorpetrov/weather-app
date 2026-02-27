@@ -16,7 +16,7 @@ export default function Lightbox({ imageUrl, onClose }: LightboxProps) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
       <img

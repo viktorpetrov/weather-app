@@ -15,11 +15,11 @@ export default function ChartCard({ date, hour, imageUrl, onClick }: ChartCardPr
   return (
     <button
       onClick={onClick}
-      className="bg-gray-900 rounded-lg overflow-hidden border border-gray-800 hover:border-blue-500 transition-colors cursor-pointer"
+      className="bg-white rounded-lg overflow-hidden border border-gray-200 hover:border-blue-500 transition-colors cursor-pointer shadow-sm"
     >
-      <div className="p-2 text-sm text-gray-300 flex justify-between">
-        <span className="font-medium">{dayLabel}</span>
-        <span className="text-gray-500">+{hour}h</span>
+      <div className="p-2 text-sm text-gray-600 flex justify-between">
+        <span className="font-medium text-gray-800">{dayLabel}</span>
+        <span className="text-gray-400">+{hour}h</span>
       </div>
       <img
         src={imageUrl}

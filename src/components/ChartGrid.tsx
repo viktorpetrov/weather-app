@@ -13,17 +13,17 @@ export default function ChartGrid({ model }: ChartGridProps) {
 
   if (loading) {
     return (
-      <div className="text-gray-400 text-center py-12">Loading charts...</div>
+      <div className="text-gray-500 text-center py-12">Loading charts...</div>
     );
   }
 
   if (error) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-400 mb-4">Charts unavailable: {error}</p>
+        <p className="text-red-600 mb-4">Charts unavailable: {error}</p>
         <button
           onClick={retry}
-          className="px-4 py-2 bg-gray-800 rounded hover:bg-gray-700 text-white"
+          className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 text-gray-800"
         >
           Retry
         </button>
@@ -33,7 +33,7 @@ export default function ChartGrid({ model }: ChartGridProps) {
 
   if (!data || data.charts.length === 0) {
     return (
-      <div className="text-gray-400 text-center py-12">No charts available</div>
+      <div className="text-gray-500 text-center py-12">No charts available</div>
     );
   }
 
@@ -48,7 +48,7 @@ export default function ChartGrid({ model }: ChartGridProps) {
               href={data.sourceUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-blue-400 hover:text-blue-300 underline"
+              className="text-blue-600 hover:text-blue-500 underline"
             >
               meteociel.fr source
             </a>
