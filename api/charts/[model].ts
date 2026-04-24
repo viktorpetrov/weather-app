@@ -6,7 +6,7 @@ type Model = "gfs" | "ecmwf";
 
 const MODEL_PAGES: Record<Model, string> = {
   gfs: "https://www.meteociel.fr/modeles/index.php?carte=778",
-  ecmwf: "https://www.meteociel.fr/modeles/ecmwf_hres.php?ech=3&mode=30&carte=2",
+  ecmwf: "https://www.meteociel.fr/modeles/ecmwf_ctrl.php?ech=6&mode=19&carte=2",
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

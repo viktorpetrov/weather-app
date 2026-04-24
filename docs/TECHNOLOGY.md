@@ -301,7 +301,7 @@ No environment variables or `.env` files. All configuration is hardcoded:
 
 | Key | Location | Value | Notes |
 |-----|----------|-------|-------|
-| Model page URLs | `vite-plugin-api.ts`, `api/charts/[model].ts` | GFS: `meteociel.fr/modeles/index.php?carte=778`<br>ECMWF: `meteociel.fr/modeles/ecmwf_hres.php?ech=3&mode=30&carte=2` | Carte/mode params select the chart type |
+| Model page URLs | `vite-plugin-api.ts`, `api/charts/[model].ts` | GFS: `meteociel.fr/modeles/index.php?carte=778`<br>ECMWF: `meteociel.fr/modeles/ecmwf_ctrl.php?ech=6&mode=19&carte=2` | Carte/mode params select the chart type |
 | Allowed proxy hosts | `vite-plugin-api.ts`, `api/image.ts` | `www.meteociel.fr`, `modeles2.meteociel.fr`, `modeles3.meteociel.fr`, `meteociel.fr` | SSRF allowlist |
 | Max forecast hours | `midday-hours.ts` | GFS: 240, ECMWF: 360 | Determines how many days ahead |
 | Cache TTL (charts) | API handlers | `max-age=1800` (30 min) | Browsers + Vercel CDN |
