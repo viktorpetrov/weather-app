@@ -1,73 +1,67 @@
-# React + TypeScript + Vite
+# Weather Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Personal forecast dashboard that scrapes midday 2 m temperature charts from
+meteociel.fr for ECMWF and GFS and presents them as a click‑to‑zoom grid,
+labelled in Brussels time and centred on Belgium.
 
-Currently, two official plugins are available:
+Live: https://weather-app-seven-omega-45.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Stack
 
-## React Compiler
+- Vite + React 19 + TypeScript + Tailwind v4
+- Vitest for unit tests
+- Vite middleware in dev / Vercel serverless functions (`api/`) in prod
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Endpoints
 
-## Expanding the ESLint configuration
+- `GET /api/charts/{gfs|ecmwf}` — JSON: latest run id, source URL, and one entry per midday‑12‑UTC frame.
+- `GET /api/image?url=…` — proxies an allow‑listed meteociel.fr image (sets `Referer`, solves CORS).
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## How it works
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Both pages embed an `imgArray` of image URLs. The ECMWF page additionally
+publishes `echValues` and `imgEchDate` (Unix seconds for the valid time of
+each frame) — which is what the server filters on, since the same ECMWF page
+mixes hours from two different runs (e.g. 06Z up to +144 h, 00Z fallback for
++150…+360 h). Filtering by Unix valid time keeps the chart series anchored
+to 12:00 UTC across the run boundary; before that fix, post‑day‑6 frames
+landed at 08:00 Brussels because the code assumed a single run.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+GFS pages don't expose timestamps, so the server falls back to filename‑hour
+math (`getMiddayForecastHours`) for that model.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+See `docs/plans/2026-02-26-weather-dashboard-design.md` for the full design,
+including the URL patterns, the multi‑run gotcha, and the data flow.
+
+## Develop
+
+```bash
+npm install
+npm run dev          # Vite dev server with /api/* middleware
+npx vitest run       # unit tests
+npx tsc --noEmit     # type check
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Deploy
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Push to `master`. The linked Vercel project (`viktor-petrovs-projects/weather-app`)
+auto‑deploys to production via its Git integration. `vercel.json` is just
+`{ "framework": "vite" }`; the functions under `api/` are picked up automatically.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Layout
+
+```
+api/                          serverless functions used in prod
+  charts/[model].ts
+  image.ts
+src/
+  App.tsx
+  components/                 ModelSelector, ChartGrid, ChartCard, Lightbox
+  hooks/useCharts.ts
+  server/
+    parse-img-array.ts        parses imgArray + echValues + imgEchDate
+    midday-hours.ts           GFS fallback midday hour math
+    build-chart-metadata.ts   timestamp path (ECMWF) + filename path (GFS)
+    vite-plugin-api.ts        /api/* middleware for dev
+docs/plans/                   design + initial implementation plan
 ```
