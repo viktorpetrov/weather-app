@@ -1,5 +1,5 @@
 import type { Plugin } from "vite";
-import { parseImgArray } from "./parse-img-array";
+import { parseChartImages } from "./parse-img-array";
 import { buildChartMetadata } from "./build-chart-metadata";
 
 type Model = "gfs" | "ecmwf";
@@ -75,8 +75,8 @@ export function apiPlugin(): Plugin {
               return;
             }
             const html = await response.text();
-            const imgUrls = parseImgArray(html);
-            const metadata = buildChartMetadata(model, imgUrls, pageUrl);
+            const images = parseChartImages(html);
+            const metadata = buildChartMetadata(model, images, pageUrl);
 
             res.writeHead(200, {
               "Content-Type": "application/json",

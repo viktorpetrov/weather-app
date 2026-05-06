@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { parseImgArray } from "../../src/server/parse-img-array.js";
+import { parseChartImages } from "../../src/server/parse-img-array.js";
 import { buildChartMetadata } from "../../src/server/build-chart-metadata.js";
 
 type Model = "gfs" | "ecmwf";
@@ -29,8 +29,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const html = await response.text();
-    const imgUrls = parseImgArray(html);
-    const metadata = buildChartMetadata(m, imgUrls, pageUrl);
+    const images = parseChartImages(html);
+    const metadata = buildChartMetadata(m, images, pageUrl);
 
     res.setHeader("Cache-Control", "public, max-age=1800");
     return res.status(200).json(metadata);
