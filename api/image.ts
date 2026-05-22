@@ -4,6 +4,7 @@ const ALLOWED_HOSTS = [
   "www.meteociel.fr",
   "modeles2.meteociel.fr",
   "modeles3.meteociel.fr",
+  "neigenew.meteociel.fr",
   "meteociel.fr",
 ];
 
