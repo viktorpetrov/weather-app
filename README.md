@@ -27,8 +27,11 @@ mixes hours from two different runs (e.g. 06Z up to +144 h, 00Z fallback for
 to 12:00 UTC across the run boundary; before that fix, post‑day‑6 frames
 landed at 08:00 Brussels because the code assumed a single run.
 
-GFS pages don't expose timestamps, so the server falls back to filename‑hour
-math (`getMiddayForecastHours`) for that model.
+GFS pages don't expose timestamps, so the server derives each frame's valid
+time from `runEpoch + forecastHour`, reading the run id from **that frame's own
+URL**. GFS pages hit the same multi‑run boundary (newest run for near hours, the
+previous 6 h‑earlier run for the tail), so reading a single run id for every
+frame would land post‑boundary days at 08:00 Brussels instead of 14:00.
 
 See `docs/plans/2026-02-26-weather-dashboard-design.md` for the full design,
 including the URL patterns, the multi‑run gotcha, and the data flow.
@@ -60,8 +63,7 @@ src/
   hooks/useCharts.ts
   server/
     parse-img-array.ts        parses imgArray + echValues + imgEchDate
-    midday-hours.ts           GFS fallback midday hour math
-    build-chart-metadata.ts   timestamp path (ECMWF) + filename path (GFS)
+    build-chart-metadata.ts   timestamp path (ECMWF) + per-frame run-id path (GFS)
     vite-plugin-api.ts        /api/* middleware for dev
 docs/plans/                   design + initial implementation plan
 ```

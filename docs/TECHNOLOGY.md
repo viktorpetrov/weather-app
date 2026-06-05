@@ -53,7 +53,7 @@ graph LR
     Browser -- "HTTPS GET /api/image?url=..." --> FnImage
     FnCharts -- "HTTPS fetch + Referer header" --> Pages
     FnImage -- "HTTPS fetch + Referer header" --> Images
-    FnCharts -. "imports" .-> SharedLogic["src/server/<br/>parse-img-array.ts<br/>build-chart-metadata.ts<br/>midday-hours.ts"]
+    FnCharts -. "imports" .-> SharedLogic["src/server/<br/>parse-img-array.ts<br/>build-chart-metadata.ts"]
 ```
 
 **Local dev** replaces the two serverless functions with a single Vite plugin (`src/server/vite-plugin-api.ts`) that intercepts `/api/*` requests in the dev server middleware. The frontend code is identical in both environments since it uses relative `/api/...` URLs.
@@ -77,8 +77,7 @@ sequenceDiagram
     M-->>API: HTML containing imgArray[n] = "url"
     Note over API: parseImgArray() extracts URLs
     Note over API: extractRunId() gets YYYYMMDDHH
-    Note over API: getMiddayForecastHours() filters to ~12:00 UTC
-    Note over API: buildChartMetadata() produces JSON
+    Note over API: buildChartMetadata() keeps 12:00-UTC frames (per-frame run id)
     API-->>U: { model, run, sourceUrl, charts[] }
     loop For each chart card visible
         U->>Proxy: GET /api/image?url=<encoded_url>
@@ -112,21 +111,22 @@ imgArray[2] = "https://modeles2.meteociel.fr/.../runs/2026022600/12-778.GIF?26-6
 
 Regex: `/imgArray\[\d+\]\s*=\s*"([^"]+)"/g`
 
-### Midday filtering algorithm: `getMiddayForecastHours`
+### Midday filtering: per-frame valid time
 
-Given a model's run hour (e.g. 00Z, 06Z, 12Z, 18Z), compute which forecast-hour offsets land on 12:00 UTC:
+A frame is kept only if its **valid time** is 12:00 UTC. Valid time is computed per
+frame, never assumed from a single run:
 
-```
-Input:  model=gfs, runHourUtc=0
-Logic:  firstMiddayOffset = (12 - 0 + 24) % 24 = 12
-        step every 24h up to MAX_HOURS[gfs]=240
-Output: [12, 36, 60, 84, 108, 132, 156, 180, 204, 228]
+- **ECMWF** carries an absolute timestamp per frame (`imgEchDate[ech]`), used directly.
+- **GFS** has no timestamps, so the valid time is `runEpoch(ownRunId) + forecastHour`,
+  where `ownRunId` is the run id parsed from **that frame's own URL** — not the page's
+  first URL. This matters because while a new run uploads, meteociel serves the newest
+  run for near hours and the **previous run (6h earlier)** for the tail. Reading a single
+  run id for every frame would shift those tail frames by 6h, surfacing a 06:00 UTC
+  (08:00 Brussels) chart mislabeled as the 12:00 UTC (14:00) midday frame.
 
-Input:  model=ecmwf, runHourUtc=12
-Logic:  firstMiddayOffset = (12 - 12 + 24) % 24 = 0
-        step every 24h up to MAX_HOURS[ecmwf]=360
-Output: [0, 24, 48, 72, ..., 336, 360]
-```
+When two runs both yield a 12:00 UTC frame for the same day, the newest run wins. The
+stored `hour` is expressed relative to the newest run so the client (which only knows
+that run id) recomputes the correct valid hour.
 
 ### Forecast hour extraction from URLs
 
@@ -249,10 +249,8 @@ weather-app/
 |   +-- server/                       # Shared server utilities (used by both dev + prod)
 |       +-- parse-img-array.ts        # Regex parser for meteociel imgArray HTML
 |       +-- parse-img-array.test.ts   # 3 tests
-|       +-- midday-hours.ts           # Calculate midday forecast hour offsets
-|       +-- midday-hours.test.ts      # 6 tests
-|       +-- build-chart-metadata.ts   # Combine parsing + filtering into JSON response
-|       +-- build-chart-metadata.test.ts  # 3 tests
+|       +-- build-chart-metadata.ts   # Parse + per-frame midday filtering into JSON response
+|       +-- build-chart-metadata.test.ts  # 4 tests
 |       +-- vite-plugin-api.ts        # Vite dev middleware — local-only API
 +-- docs/
 |   +-- plans/
@@ -286,8 +284,7 @@ weather-app/
 | File | Tests | What's tested |
 |------|-------|--------------|
 | `parse-img-array.test.ts` | 3 | ECMWF relative URLs, GFS absolute URLs, empty HTML |
-| `midday-hours.test.ts` | 6 | GFS 00Z/06Z/12Z/18Z runs, ECMWF 00Z/12Z runs |
-| `build-chart-metadata.test.ts` | 3 | Full GFS pipeline, ECMWF HRES pipeline, empty input |
+| `build-chart-metadata.test.ts` | 4 | Full GFS pipeline, ECMWF HRES pipeline, mixed-run GFS tail, empty input |
 
 **Strategy:** Pure-function unit tests only. No mocks — the server utilities are deterministic string-in/data-out functions. Tests validate the full parsing pipeline: raw URL strings in, structured `ChartMetadata` out.
 
@@ -303,7 +300,7 @@ No environment variables or `.env` files. All configuration is hardcoded:
 |-----|----------|-------|-------|
 | Model page URLs | `vite-plugin-api.ts`, `api/charts/[model].ts` | GFS: `meteociel.fr/modeles/index.php?carte=778`<br>ECMWF: `meteociel.fr/modeles/ecmwf_ctrl.php?ech=6&mode=19&carte=2` | Carte/mode params select the chart type |
 | Allowed proxy hosts | `vite-plugin-api.ts`, `api/image.ts` | `www.meteociel.fr`, `modeles2.meteociel.fr`, `modeles3.meteociel.fr`, `meteociel.fr` | SSRF allowlist |
-| Max forecast hours | `midday-hours.ts` | GFS: 240, ECMWF: 360 | Determines how many days ahead |
+| Max forecast hours | derived from available frames | GFS: ~240, ECMWF: ~360 | Determines how many days ahead |
 | Cache TTL (charts) | API handlers | `max-age=1800` (30 min) | Browsers + Vercel CDN |
 | Cache TTL (images) | API handlers | `max-age=3600` (1 hr) | Browsers + Vercel CDN |
 | Vercel framework | `vercel.json` | `"vite"` | Required |

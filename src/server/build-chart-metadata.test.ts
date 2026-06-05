@@ -68,6 +68,36 @@ describe("buildChartMetadata", () => {
     ]);
   });
 
+  it("uses each frame's own run id when GFS page mixes two runs (no timestamps)", () => {
+    // While a new run uploads, meteociel serves the newest run for near hours and
+    // the PREVIOUS run for the tail. The newest run is 12Z 2026-06-05; the tail is
+    // still 06Z 2026-06-05 (6h earlier). A frame's forecast hour means a different
+    // valid time depending on which run it belongs to.
+    const images = noTs([
+      // 12Z run, hour 192 -> 2026-06-13 12:00 UTC (midday) — KEEP
+      "https://neigenew.meteociel.fr/modeles_gfs/runs/2026060512/192-778.GIF?05-12",
+      // 12Z run, hour 198 -> 2026-06-13 18:00 UTC — SKIP
+      "https://neigenew.meteociel.fr/modeles_gfs/runs/2026060512/198-778.GIF?05-12",
+      // 06Z run (tail), hour 216 -> 2026-06-14 06:00 UTC (08:00 Brussels) — SKIP.
+      // The single-run logic wrongly treats this as 12Z+216h = 2026-06-14 12:00.
+      "https://neigenew.meteociel.fr/modeles_gfs/runs/2026060506/216-778.GIF?05-06",
+      // 06Z run (tail), hour 222 -> 2026-06-14 12:00 UTC (midday) — KEEP for 06-14
+      "https://neigenew.meteociel.fr/modeles_gfs/runs/2026060506/222-778.GIF?05-06",
+    ]);
+
+    const result = buildChartMetadata("gfs", images);
+
+    expect(result.run).toBe("2026060512");
+    const dates = result.charts.map((c) => c.date);
+    expect(dates).toEqual(["2026-06-13", "2026-06-14"]);
+
+    // 2026-06-14 must come from the true 12-UTC frame (222 of the 06Z run),
+    // NOT the 06-UTC frame (216) that the single-run logic mislabels as 2 PM.
+    const jun14 = result.charts.find((c) => c.date === "2026-06-14")!;
+    expect(jun14.imageUrl).toContain("222-778.GIF");
+    expect(jun14.imageUrl).not.toContain("216-778.GIF");
+  });
+
   it("returns empty charts when input is empty", () => {
     const result = buildChartMetadata("gfs", []);
     expect(result.charts).toEqual([]);

@@ -1,4 +1,3 @@
-import { getMiddayForecastHours } from "./midday-hours.js";
 import type { ChartImage } from "./parse-img-array.js";
 
 type Model = "gfs" | "ecmwf";
@@ -16,11 +15,14 @@ interface ChartMetadata {
   charts: ChartEntry[];
 }
 
-function extractRunId(urls: string[]): string {
-  if (urls.length === 0) return "";
-  const url = urls[0];
+function extractRunIdFromUrl(url: string): string {
   const match = url.match(/runs\/(\d{10})\//);
   return match ? match[1] : "";
+}
+
+function extractRunId(urls: string[]): string {
+  if (urls.length === 0) return "";
+  return extractRunIdFromUrl(urls[0]);
 }
 
 function runEpochSec(runId: string): number {
@@ -50,11 +52,6 @@ function formatDateUtc(secondsSinceEpoch: number): string {
   return `${y}-${m}-${day}`;
 }
 
-function forecastDate(runId: string, forecastHour: number): string {
-  if (!runId) return "";
-  return formatDateUtc(runEpochSec(runId) + forecastHour * 3600);
-}
-
 function makeProxyUrl(originalUrl: string): string {
   const fullUrl = originalUrl.startsWith("http")
     ? originalUrl
@@ -68,7 +65,6 @@ export function buildChartMetadata(
   sourceUrl = "",
 ): ChartMetadata {
   const runId = extractRunId(images.map((i) => i.url));
-  const runHour = runId ? parseInt(runId.slice(8, 10), 10) : 0;
   const runEpoch = runId ? runEpochSec(runId) : 0;
 
   const hasTimestamps =
@@ -89,20 +85,30 @@ export function buildChartMetadata(
       });
     }
   } else {
-    const middayHours = new Set(getMiddayForecastHours(model, runHour));
-    const hourToUrl = new Map<number, string>();
+    // No per-frame timestamps (GFS). Derive each frame's valid time from the run id
+    // embedded in ITS OWN url + forecast hour. While a new run uploads, meteociel
+    // serves the newest run for near hours and the previous run (6h earlier) for the
+    // tail, so we cannot assume a single run for every frame. Keep only true 12-UTC
+    // (midday) frames; when two runs both cover a day, prefer the newest run.
+    const byDate = new Map<string, { hour: number; date: string; url: string; runId: string }>();
     for (const img of images) {
       const h = extractForecastHour(model, img.url);
-      if (h >= 0) hourToUrl.set(h, img.url);
-    }
-    for (const [hour, url] of hourToUrl) {
-      if (middayHours.has(hour)) {
-        charts.push({
-          hour,
-          date: forecastDate(runId, hour),
-          imageUrl: makeProxyUrl(url),
-        });
+      if (h < 0) continue;
+      const ownRunId = extractRunIdFromUrl(img.url) || runId;
+      if (!ownRunId) continue;
+      const validSec = runEpochSec(ownRunId) + h * 3600;
+      if (Math.floor(validSec / 3600) % 24 !== 12) continue;
+      const date = formatDateUtc(validSec);
+      const existing = byDate.get(date);
+      if (!existing || ownRunId > existing.runId) {
+        // hour is expressed relative to the newest run so the client (which only
+        // knows that run id) recomputes the correct valid hour.
+        const hour = Math.round((validSec - runEpoch) / 3600);
+        byDate.set(date, { hour, date, url: img.url, runId: ownRunId });
       }
+    }
+    for (const { hour, date, url } of byDate.values()) {
+      charts.push({ hour, date, imageUrl: makeProxyUrl(url) });
     }
   }
 
